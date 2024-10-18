@@ -1,0 +1,206 @@
+[
+    {
+        "name": "Alpine Adventure Lodge",
+        "type": "Hostel",
+        "location": "15 minutes from Sapporo Station",
+        "priceRange": "45-75",
+        "starRating": 2,
+        "maxOccupancy": 2,
+        "petFriendly": false,
+        "amenities": [
+            "Free Wi-Fi",
+            "Ski storage",
+            "On-site cafe with vegetarian options",
+            "Shared lounge area"
+        ],
+        "breakfastOptions": "Available at extra cost, continental",
+        "accessibilityFeatures": [],
+        "guestReviews": {
+            "averageRating": 4.1,
+            "reviews": [
+                "Great value for solo travelers, close to ski lifts.",
+                "Rooms are basic but comfortable. Cozy common areas."
+            ]
+        },
+        "roomTypes": [
+            {
+                "name": "Single Bed in Mixed Dorm",
+                "bedConfiguration": "1 single bed",
+                "pricePerNight": 45
+            },
+            {
+                "name": "Private Room",
+                "bedConfiguration": "1 queen bed",
+                "pricePerNight": 75
+            }
+        ],
+        "specialOffers": [
+            "10% off for bookings of 7 nights or more"
+        ],
+        "propertyAmenities": [
+            "Ski rental shop",
+            "Laundry facilities"
+        ],
+        "petPolicies": "No pets allowed",
+        "localAttractions": [
+            "Sapporo Snow Festival",
+            "Nearby ski resorts"
+        ],
+        "propertyTypeClassification": "Budget, Adventure"
+    },
+    {
+        "name": "Snowy Peaks Family Resort",
+        "type": "Resort",
+        "location": "20 minutes from downtown Sapporo",
+        "priceRange": "180-250",
+        "starRating": 4,
+        "maxOccupancy": 5,
+        "petFriendly": false,
+        "amenities": [
+            "Indoor pool",
+            "Kid’s play area",
+            "Halal-certified restaurant",
+            "Shuttle service to ski areas"
+        ],
+        "breakfastOptions": "Included, buffet style",
+        "accessibilityFeatures": [
+            "Wheelchair-accessible rooms",
+            "Elevators"
+        ],
+        "guestReviews": {
+            "averageRating": 4.5,
+            "reviews": [
+                "Perfect for families! The kids loved the play area.",
+                "Spacious rooms and great breakfast options."
+            ]
+        },
+        "roomTypes": [
+            {
+                "name": "Family Suite",
+                "bedConfiguration": "1 king bed, 2 twin beds, 1 sofa bed",
+                "pricePerNight": 250
+            },
+            {
+                "name": "Deluxe Room",
+                "bedConfiguration": "1 king bed, 1 sofa bed",
+                "pricePerNight": 180
+            }
+        ],
+        "specialOffers": [
+            "Stay 5 nights, get the 6th night free"
+        ],
+        "propertyAmenities": [
+            "Spa and wellness center",
+            "Free parking",
+            "Childcare services"
+        ],
+        "petPolicies": "No pets allowed",
+        "localAttractions": [
+            "Moerenuma Park",
+            "Sapporo Art Museum"
+        ],
+        "propertyTypeClassification": "Family-Friendly, Relaxation"
+    },
+    {
+        "name": "Sapporo Sky High Apartments",
+        "type": "Serviced Apartment",
+        "location": "Downtown Sapporo, near Susukino",
+        "priceRange": "90-150",
+        "starRating": 3,
+        "maxOccupancy": 4,
+        "petFriendly": false,
+        "amenities": [
+            "Full kitchen",
+            "In-room laundry facilities",
+            "Rooftop terrace",
+            "Concierge service"
+        ],
+        "breakfastOptions": "Self-catering, nearby cafes",
+        "accessibilityFeatures": [
+            "Elevators",
+            "Accessible parking"
+        ],
+        "guestReviews": {
+            "averageRating": 4.0,
+            "reviews": [
+                "Great location for exploring the city.",
+                "Good facilities for a longer stay."
+            ]
+        },
+        "roomTypes": [
+            {
+                "name": "One-Bedroom Apartment",
+                "bedConfiguration": "1 queen bed, 1 sofa bed",
+                "pricePerNight": 90
+            },
+            {
+                "name": "Two-Bedroom Apartment",
+                "bedConfiguration": "2 queen beds",
+                "pricePerNight": 150
+            }
+        ],
+        "specialOffers": [
+            "15% discount for stays longer than 10 days"
+        ],
+        "propertyAmenities": [
+            "Business center",
+            "Private parking (paid)"
+        ],
+        "petPolicies": "No pets allowed",
+        "localAttractions": [
+            "Odori Park",
+            "Sapporo TV Tower"
+        ],
+        "propertyTypeClassification": "Urban, Self-Catering"
+    },
+    {
+        "name": "Zen Garden Ryokan",
+        "type": "Ryokan",
+        "location": "Jozankei Onsen, 30 minutes from Sapporo",
+        "priceRange": "220-350",
+        "starRating": 4,
+        "maxOccupancy": 3,
+        "petFriendly": false,
+        "amenities": [
+            "Private onsen (hot spring)",
+            "Traditional kaiseki dinners",
+            "Shuttle service to Sapporo"
+        ],
+        "breakfastOptions": "Included, traditional Japanese breakfast",
+        "accessibilityFeatures": [
+            "Tatami rooms (limited wheelchair access)"
+        ],
+        "guestReviews": {
+            "averageRating": 4.7,
+            "reviews": [
+                "Amazing onsen experience! Great traditional meals.",
+                "Beautiful, serene environment."
+            ]
+        },
+        "roomTypes": [
+            {
+                "name": "Deluxe Tatami Room",
+                "bedConfiguration": "2 futons",
+                "pricePerNight": 220
+            },
+            {
+                "name": "Luxury Tatami Suite",
+                "bedConfiguration": "2 futons, 1 sofa bed",
+                "pricePerNight": 350
+            }
+        ],
+        "specialOffers": [
+            "20% off for bookings made 30 days in advance"
+        ],
+        "propertyAmenities": [
+            "Garden and tea room",
+            "Cultural workshops"
+        ],
+        "petPolicies": "No pets allowed",
+        "localAttractions": [
+            "Jozankei Hot Springs",
+            "Hokkaido Shrine"
+        ],
+        "propertyTypeClassification": "Traditional, Luxury"
+    }
+]
