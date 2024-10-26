@@ -3,10 +3,16 @@ import json
 import streamlit as st
 import os
 from dotenv import load_dotenv
+from datetime import datetime
 
 # Load environment variables
 load_dotenv()
 wordware_api_key = os.getenv('WORDWARE_API_KEY')
+amadeus_api_key = os.getenv("AMADEUS_API_KEY")
+amadeus_api_secret = os.getenv("AMADEUS_API_SECRET")
+
+# Amadeus authentication URL
+auth_url = "https://test.api.amadeus.com/v1/security/oauth2/token"
 
 # Initialize session state for output
 if 'output_text' not in st.session_state:
@@ -15,114 +21,133 @@ if 'output_text' not in st.session_state:
 def remove_backticks(input_string):
     return input_string.replace('`', '')
 
-def do_wordware(prompt_id, inputs_wordware, api_key):
-    # Construct the API endpoint URL
-    url = f"https://app.wordware.ai/api/released-app/{prompt_id}/run"
+# Function to get Amadeus API access token
+def get_access_token():
     headers = {
-        "Authorization": f"Bearer {api_key}",
-        "Content-Type": "application/json"
+        "Content-Type": "application/x-www-form-urlencoded"
+    }
+    data = {
+        "grant_type": "client_credentials",
+        "client_id": amadeus_api_key,
+        "client_secret": amadeus_api_secret
+    }
+    
+    response = requests.post(auth_url, headers=headers, data=data)
+    
+    if response.status_code == 200:
+        token = response.json().get("access_token")
+        return token
+    else:
+        st.error(f"Failed to get access token: {response.status_code}")
+        return None
+
+# Step 1: Function to get hotel IDs from Hotel List API
+def get_hotel_ids(city_code):
+    token = get_access_token()
+    if not token:
+        return None
+
+    url = f"https://test.api.amadeus.com/v1/reference-data/locations/hotels/by-city"
+    headers = {
+        "Authorization": f"Bearer {token}"
+    }
+    params = {
+        "cityCode": city_code,
+        "hotelSource": "ALL"  # Include all hotels
     }
 
-    # Print debugging information
-    print(f"Request URL: {url}")
-    print(f"Headers: {headers}")
-    print(f"Payload: {json.dumps({'inputs': inputs_wordware, 'version': '^1.0'}, indent=4)}")
-
-    # Attempt to send POST request with the required version
-    try:
-        response = requests.post(
-            url,
-            json={
-                "inputs": inputs_wordware,
-                "version": "^1.0"  # Adjust the version if needed
-            },
-            headers=headers
-        )
-        
-        # Check for status code
-        if response.status_code != 200:
-            print(f"Request failed with status code {response.status_code}.")
-            print(f"Response content: {response.content.decode('utf-8')}")
-            st.error(f"Request failed with status code {response.status_code}.")
-            return None
-        else:
-            # Process successful response
-            text_output = ""
-            for line in response.iter_lines():
-                if line:
-                    content = json.loads(line.decode("utf-8"))
-                    value = content["value"]
-                    if value["type"] == "chunk":
-                        text_output += value["value"]
-            st.session_state['output_text'] = text_output + st.session_state['output_text']
-            return text_output
-    except requests.exceptions.RequestException as e:
-        st.error(f"Request failed: {e}")
-        print(f"Request Exception: {e}")
+    response = requests.get(url, headers=headers, params=params)
+    
+    if response.status_code == 200:
+        hotels = response.json().get("data", [])
+        hotel_ids = [hotel["hotelId"] for hotel in hotels]
+        return hotel_ids
+    else:
+        st.error(f"Failed to retrieve hotel IDs: {response.status_code}")
         return None
 
-def load_user_data(file_path="users.txt"):
-    with open(file_path, 'r') as file:
-        user_data = file.read()
-    return user_data
+# Step 2: Function to search for hotel offers using Hotel Offers API
+def search_hotel_offers(hotel_ids, check_in_date, check_out_date, adults):
+    token = get_access_token()
+    if not token:
+        return None
 
-def load_accommodation_data(file_path="accommodation.txt"):
+    url = f"https://test.api.amadeus.com/v3/shopping/hotel-offers"
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+    }
+    params = {
+        "hotelIds": ','.join(hotel_ids),
+        "adults": adults,
+        "checkInDate": check_in_date,
+        "checkOutDate": check_out_date,
+        "countryOfResidence": "AUS",
+    }
+
+    response = requests.get(url, headers=headers, params=params)
+
+    if response.status_code == 200:
+        hotel_offers = response.json()
+        return hotel_offers
+    else:
+        st.error(f"Failed to retrieve hotel offers: {response.status_code}")
+        return None
+
+# Streamlit interface for hotel search based on JSON user data
+st.title("Personalized Hotel Search for Predefined Users")
+
+# Load user data from users.json
+def load_user_data(file_path="users.json"):
     try:
         with open(file_path, 'r') as file:
-            accommodation_data = json.load(file)
-        return accommodation_data
+            user_data = json.load(file)
+        return user_data["users"]
+    except FileNotFoundError:
+        st.error(f"File not found: {file_path}")
+        return None
     except json.JSONDecodeError as e:
-        st.error(f"Failed to load accommodation data: {e}")
-        print(f"JSON Decode Error: {e}")
+        st.error(f"Failed to parse JSON file: {e}")
         return None
 
-# Streamlit interface
-st.header("Personalized Travel Page Generator")
+users = load_user_data()
 
-if st.button("Generate"):
-    # Load data from text files
-    user_data = load_user_data()
-    accommodation_data = load_accommodation_data()
+# Dropdown for selecting a user
+if users:
+    user_names = [user['name'] for user in users]
+    selected_user = st.selectbox("Select a user", user_names)
+    
+    selected_user_data = next((user for user in users if user['name'] == selected_user), None)
+    
+    if selected_user_data:
+        if st.button(f"Search Hotels for {selected_user}"):
+            st.write(f"Searching hotels for {selected_user} traveling to {selected_user_data['destination']}...")
 
-    if user_data and accommodation_data:
-        # Step 1: Create a detailed user persona
-        inputs = {
-            "task": "Create a detailed user persona",
-            "user_data": user_data
-        }
-        persona = do_wordware("225b9fa4-f1c9-4fac-b1a1-0b38ae5efc81", inputs, wordware_api_key)
-        st.write("Persona:", persona)
-        
-        # Step 2: Evaluate cultural differences
-        inputs = {
-            "task": "Evaluate cultural differences",
-            "user_data": user_data,
-            "destination": "Hokkaido, Japan"
-        }
-        cultural_differences = do_wordware("225b9fa4-f1c9-4fac-b1a1-0b38ae5efc81", inputs, wordware_api_key)
-        st.write("Cultural Differences:", cultural_differences)
-        
-        # Step 3: Match user to accommodation and activities
-        inputs = {
-            "task": "Match user to accommodations and activities",
-            "user_persona": persona,
-            "accommodation_data": accommodation_data
-        }
-        recommendations = do_wordware("225b9fa4-f1c9-4fac-b1a1-0b38ae5efc81", inputs, wordware_api_key)
-        st.write("Recommendations:", recommendations)
-        
-        # Step 4: Generate a user-friendly travel page
-        inputs = {
-            "task": "Generate travel page",
-            "user_persona": persona,
-            "cultural_differences": cultural_differences,
-            "recommendations": recommendations,
-            "additional_info": {
-                "health_and_safety": "Include relevant health and safety tips for the destination.",
-                "travel_documents": "Include passport and visa requirements for the destination."
-            }
-        }
-        travel_page = do_wordware("travel-page-prompt-id", inputs, wordware_api_key)
-        st.write("Generated Travel Page:", travel_page)
+            # Get hotel IDs based on city code
+            if selected_user_data['destination'] == "Japan (Hokkaido)":
+                location_code = "SPK"  # Example IATA city code for Sapporo, Hokkaido
+            else:
+                location_code = None
 
-st.write(st.session_state['output_text'])
+            if location_code:
+                hotel_ids = get_hotel_ids(location_code)
+                print(hotel_ids)
+                
+                if hotel_ids:
+                    # Use hotel IDs to get hotel offers
+                    hotel_offers = search_hotel_offers(
+                        hotel_ids,
+                        selected_user_data['dates']['check_in'],
+                        selected_user_data['dates']['check_out'],
+                        selected_user_data['travel_group_size']
+                    )
+
+                    if hotel_offers:
+                        st.write(f"Hotel Offers for {selected_user}:")
+                        st.write(json.dumps(hotel_offers, indent=4))
+                    else:
+                        st.write(f"No hotel offers found for {selected_user}.")
+                else:
+                    st.write("No hotels found in the selected city.")
+            else:
+                st.write(f"Unknown location for {selected_user_data['destination']}.")

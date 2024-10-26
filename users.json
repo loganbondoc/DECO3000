@@ -1,0 +1,53 @@
+{
+    "users": [
+        {
+        "name": "Alex Carter",
+        "home_country": "Canada",
+        "destination": "Japan (Hokkaido)",
+        "duration_of_stay": "14 days",
+        "dates": {
+            "check_in": "January 5th, 2025",
+            "check_out": "January 19th, 2025"
+        },
+        "purpose_of_travel": "Adventure and exploration",
+        "interests": ["Skiing", "Snowboarding"],
+        "travel_group_size": 1,
+        "group_type": "Solo",
+        "nationality": "Canadian",
+        "past_purchase_history": [
+            "Previous trips to Switzerland",
+            "Previous trips to New Zealand",
+            "Often books ski passes",
+            "Snowboarding lessons",
+            "Outdoor adventure tours"
+        ],
+        "accessibility_needs": "None",
+        "dietary_requirements": "Vegetarian",
+        "price_sensitivity": "Medium",
+        "language_preference": "English"
+        },
+        {
+        "name": "Siti Rahmawati",
+        "home_country": "Indonesia",
+        "destination": "Japan (Hokkaido)",
+        "duration_of_stay": "10 days",
+        "dates": {
+            "check_in": "February 4th, 2025",
+            "check_out": "February 14th, 2025"
+        },
+        "purpose_of_travel": "Family vacation",
+        "interests": ["Exploring Christmas markets", "Cultural sites"],
+        "travel_group_size": 4,
+        "group_type": "Family",
+        "nationality": "Indonesian",
+        "past_purchase_history": [
+            "Previous trips to Singapore",
+            "Previous trips to Malaysia"
+        ],
+        "accessibility_needs": "Child-friendly amenities",
+        "dietary_requirements": "Halal meals",
+        "price_sensitivity": "High",
+        "language_preference": ["Indonesian", "Some English"]
+        }
+    ]
+    }
