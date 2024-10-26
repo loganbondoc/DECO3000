@@ -41,9 +41,8 @@ def get_access_token():
         st.error(f"Failed to get access token: {response.status_code}")
         return None
 
-# Step 1: Function to get hotel IDs from Hotel List API
 # Step 1: Function to get limited hotel IDs from Hotel List API
-def get_hotel_ids(city_code, max_ids=10):  # Add a parameter to limit the number of IDs
+def get_hotel_ids(city_code, max_ids=10):
     token = get_access_token()
     if not token:
         return None
@@ -67,6 +66,31 @@ def get_hotel_ids(city_code, max_ids=10):  # Add a parameter to limit the number
         st.error(f"Failed to retrieve hotel IDs: {response.status_code}")
         return None
 
+# Step 1: Function to get all hotel IDs from Hotel List API without a limit
+# def get_hotel_ids(city_code):
+#     token = get_access_token()
+#     if not token:
+#         return None
+
+#     url = f"https://test.api.amadeus.com/v1/reference-data/locations/hotels/by-city"
+#     headers = {
+#         "Authorization": f"Bearer {token}"
+#     }
+#     params = {
+#         "cityCode": city_code,
+#         "hotelSource": "ALL"  # Include all hotels
+#     }
+
+#     response = requests.get(url, headers=headers, params=params)
+    
+#     if response.status_code == 200:
+#         hotels = response.json().get("data", [])
+#         hotel_ids = [hotel["hotelId"] for hotel in hotels]
+#         return hotel_ids  # No limit on IDs returned
+#     else:
+#         st.error(f"Failed to retrieve hotel IDs: {response.status_code}")
+#         return None
+
 
 # Step 2: Function to search for hotel offers using Hotel Offers API
 def search_hotel_offers(hotel_ids, check_in_date, check_out_date, adults):
@@ -80,14 +104,8 @@ def search_hotel_offers(hotel_ids, check_in_date, check_out_date, adults):
         "Content-Type": "application/json"
     }
     params = {
-        # "hotelIds": list(','.join(hotel_ids)),
         "hotelIds": hotel_ids,
-        # "hotelIds": ['HLPAR266']
-        # "hotelIds": ['MCLONGHM']
-        # "adults": adults,
-        # "checkInDate": check_in_date,
-        # "checkOutDate": check_out_date,
-        # "countryOfResidence": "AUS",
+        "check_in_date": 2024-10-26
     }
 
     response = requests.get(url, headers=headers, params=params)
@@ -135,11 +153,11 @@ if users:
             elif selected_user_data['destination'] == "Japan (Tokyo)":
                 location_code = "TYO"  # Example IATA city code for Tokyo
             elif selected_user_data['destination'] == "USA (New York City)":
-                location_code = "NYC"  # Example IATA city code for Tokyo
+                location_code = "NYC"  # Example IATA city code for New York City
             elif selected_user_data['destination'] == "UK (London)":
-                location_code = "LON"  # Example IATA city code for Tokyo
+                location_code = "LON"  # Example IATA city code for London
             elif selected_user_data['destination'] == "France (Paris)":
-                location_code = "CDG"  # Example IATA city code for Tokyo
+                location_code = "CDG"  # Example IATA city code for Paris
             else:
                 location_code = None
 
@@ -147,21 +165,45 @@ if users:
                 hotel_ids = get_hotel_ids(location_code)
                 print(hotel_ids)
                 
-                if hotel_ids:
-                    # Use hotel IDs to get hotel offers
-                    hotel_offers = search_hotel_offers(
-                        hotel_ids,
-                        selected_user_data['dates']['check_in'],
-                        selected_user_data['dates']['check_out'],
-                        selected_user_data['travel_group_size']
-                    )
+            if hotel_ids:
+                # Use hotel IDs to get hotel offers
+                hotel_offers = search_hotel_offers(
+                    hotel_ids,
+                    selected_user_data['dates']['check_in'],
+                    selected_user_data['dates']['check_out'],
+                    selected_user_data['travel_group_size']
+                )
 
-                    if hotel_offers:
-                        st.write(f"Hotel Offers for {selected_user}:")
-                        st.write(json.dumps(hotel_offers, indent=4))
-                    else:
-                        st.write(f"No hotel offers found for {selected_user}.")
+                if hotel_offers:
+                    st.write(f"Hotel Offers for {selected_user}:")
+                    for offer in hotel_offers.get("data", []):
+                        # Extract hotel and offer information
+                        hotel_info = offer.get("hotel", {})
+                        hotel_name = hotel_info.get("name", "N/A")
+                        hotel_address = hotel_info.get("address", {}).get("lines", ["N/A"])[0]  # Primary address line
+                        hotel_lat = hotel_info.get("latitude", "N/A")
+                        hotel_lon = hotel_info.get("longitude", "N/A")
+                        
+                        # Display hotel information
+                        st.subheader(hotel_name)
+                        st.write(f"Address: {hotel_address}")
+                        st.write(f"Location: Latitude {hotel_lat}, Longitude {hotel_lon}")
+
+                        # Loop through each offer for the hotel
+                        for individual_offer in offer.get("offers", []):
+                            # Extract offer details
+                            price_info = individual_offer.get("price", {})
+                            price = price_info.get("total", "N/A")
+                            currency = price_info.get("currency", "N/A")
+                            check_in = individual_offer.get("checkInDate", "N/A")
+                            check_out = individual_offer.get("checkOutDate", "N/A")
+                            
+                            # Display offer details
+                            st.write(f"Check-in: {check_in}")
+                            st.write(f"Check-out: {check_out}")
+                            st.write(f"Price: {currency} {price}")
+                            st.write("---")
                 else:
-                    st.write("No hotels found in the selected city.")
+                    st.write(f"No hotel offers found for {selected_user}.")
             else:
-                st.write(f"Unknown location for {selected_user_data['destination']}.")
+                st.write("No hotels found in the selected city.")
