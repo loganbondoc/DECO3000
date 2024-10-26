@@ -42,7 +42,8 @@ def get_access_token():
         return None
 
 # Step 1: Function to get hotel IDs from Hotel List API
-def get_hotel_ids(city_code):
+# Step 1: Function to get limited hotel IDs from Hotel List API
+def get_hotel_ids(city_code, max_ids=10):  # Add a parameter to limit the number of IDs
     token = get_access_token()
     if not token:
         return None
@@ -61,10 +62,11 @@ def get_hotel_ids(city_code):
     if response.status_code == 200:
         hotels = response.json().get("data", [])
         hotel_ids = [hotel["hotelId"] for hotel in hotels]
-        return hotel_ids
+        return hotel_ids[:max_ids]  # Limit the number of IDs to max_ids
     else:
         st.error(f"Failed to retrieve hotel IDs: {response.status_code}")
         return None
+
 
 # Step 2: Function to search for hotel offers using Hotel Offers API
 def search_hotel_offers(hotel_ids, check_in_date, check_out_date, adults):
@@ -78,17 +80,21 @@ def search_hotel_offers(hotel_ids, check_in_date, check_out_date, adults):
         "Content-Type": "application/json"
     }
     params = {
-        "hotelIds": ','.join(hotel_ids),
-        "adults": adults,
-        "checkInDate": check_in_date,
-        "checkOutDate": check_out_date,
-        "countryOfResidence": "AUS",
+        # "hotelIds": list(','.join(hotel_ids)),
+        "hotelIds": hotel_ids,
+        # "hotelIds": ['HLPAR266']
+        # "hotelIds": ['MCLONGHM']
+        # "adults": adults,
+        # "checkInDate": check_in_date,
+        # "checkOutDate": check_out_date,
+        # "countryOfResidence": "AUS",
     }
 
     response = requests.get(url, headers=headers, params=params)
 
     if response.status_code == 200:
         hotel_offers = response.json()
+        print("WE DID IT")
         return hotel_offers
     else:
         st.error(f"Failed to retrieve hotel offers: {response.status_code}")
@@ -126,6 +132,14 @@ if users:
             # Get hotel IDs based on city code
             if selected_user_data['destination'] == "Japan (Hokkaido)":
                 location_code = "SPK"  # Example IATA city code for Sapporo, Hokkaido
+            elif selected_user_data['destination'] == "Japan (Tokyo)":
+                location_code = "TYO"  # Example IATA city code for Tokyo
+            elif selected_user_data['destination'] == "USA (New York City)":
+                location_code = "NYC"  # Example IATA city code for Tokyo
+            elif selected_user_data['destination'] == "UK (London)":
+                location_code = "LON"  # Example IATA city code for Tokyo
+            elif selected_user_data['destination'] == "France (Paris)":
+                location_code = "CDG"  # Example IATA city code for Tokyo
             else:
                 location_code = None
 
