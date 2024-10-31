@@ -41,8 +41,32 @@ def get_access_token():
         st.error(f"Failed to get access token: {response.status_code}")
         return None
 
-# Step 1: Function to get limited hotel IDs from Hotel List API
-def get_hotel_ids(city_code, max_ids=10):
+# Function to call WordWare API
+def do_wordware(prompt_id, inputs_wordware, api_key):
+    response = requests.post(
+        f"https://app.wordware.ai/api/released-app/{prompt_id}/run",
+        json={"inputs": inputs_wordware},
+        headers={"Authorization": f"Bearer {api_key}"},
+        stream=True,
+    )
+    if response.status_code != 200:
+        st.error(f"Request failed with status code {response.status_code}.")
+        return "[]"  # Return an empty JSON array as a string on failure
+    else:
+        # Successful API call
+        text_output = ""
+        for line in response.iter_lines():
+            if line:
+                content = json.loads(line.decode("utf-8"))
+                value = content["value"]
+                if value["type"] == "chunk":
+                    text_output += value["value"]
+        st.session_state['output_text'] = text_output + st.session_state['output_text']
+        return text_output or "[]"  # Ensure it returns a string
+
+
+# Step 1: Function to get hotel IDs from Hotel List API with filters
+def get_hotel_ids(city_code, amenities=None, max_ids=10):
     token = get_access_token()
     if not token:
         return None
@@ -53,7 +77,8 @@ def get_hotel_ids(city_code, max_ids=10):
     }
     params = {
         "cityCode": city_code,
-        "hotelSource": "ALL"  # Include all hotels
+        "hotelSource": "ALL",
+        "amenities": ",".join(amenities) if amenities else None  # Use amenities as a filter
     }
 
     response = requests.get(url, headers=headers, params=params)
@@ -61,35 +86,11 @@ def get_hotel_ids(city_code, max_ids=10):
     if response.status_code == 200:
         hotels = response.json().get("data", [])
         hotel_ids = [hotel["hotelId"] for hotel in hotels]
-        return hotel_ids[:max_ids]  # Limit the number of IDs to max_ids
+        return hotel_ids[:max_ids]
     else:
         st.error(f"Failed to retrieve hotel IDs: {response.status_code}")
         return None
 
-# Step 1: Function to get all hotel IDs from Hotel List API without a limit
-# def get_hotel_ids(city_code):
-#     token = get_access_token()
-#     if not token:
-#         return None
-
-#     url = f"https://test.api.amadeus.com/v1/reference-data/locations/hotels/by-city"
-#     headers = {
-#         "Authorization": f"Bearer {token}"
-#     }
-#     params = {
-#         "cityCode": city_code,
-#         "hotelSource": "ALL"  # Include all hotels
-#     }
-
-#     response = requests.get(url, headers=headers, params=params)
-    
-#     if response.status_code == 200:
-#         hotels = response.json().get("data", [])
-#         hotel_ids = [hotel["hotelId"] for hotel in hotels]
-#         return hotel_ids  # No limit on IDs returned
-#     else:
-#         st.error(f"Failed to retrieve hotel IDs: {response.status_code}")
-#         return None
 
 
 # Step 2: Function to search for hotel offers using Hotel Offers API
@@ -105,21 +106,66 @@ def search_hotel_offers(hotel_ids, check_in_date, check_out_date, adults):
     }
     params = {
         "hotelIds": hotel_ids,
-        "check_in_date": 2024-10-26
     }
 
     response = requests.get(url, headers=headers, params=params)
 
     if response.status_code == 200:
         hotel_offers = response.json()
-        print("WE DID IT")
         return hotel_offers
     else:
         st.error(f"Failed to retrieve hotel offers: {response.status_code}")
         return None
 
-# Streamlit interface for hotel search based on JSON user data
-st.title("Personalized Hotel Search for Predefined Users")
+# New function to fetch tours and activities including booking link
+def get_tours_and_activities(latitude, longitude, max_activities=30):
+    token = get_access_token()
+    if not token:
+        return None
+
+    url = f"https://test.api.amadeus.com/v1/shopping/activities"
+    headers = {
+        "Authorization": f"Bearer {token}"
+    }
+    params = {
+        "latitude": latitude,
+        "longitude": longitude,
+        "radius": 10  # Radius in kilometers
+    }
+
+    response = requests.get(url, headers=headers, params=params)
+
+    if response.status_code == 200:
+        activities = response.json().get("data", [])
+        return activities[:max_activities]  # Limit the number of activities displayed
+    else:
+        st.error(f"Failed to retrieve tours and activities: {response.status_code}")
+        return None
+
+# # Function to call WordWare API to categorize traveler
+# def categorize_traveler(user_data):
+#     categorization_inputs = {
+#         "Group Type": user_data["group_type"],
+#         "Interests": ", ".join(user_data.get("interests", [])),
+#         "Accessibility Needs": user_data.get("accessibility_needs", "N/A"),
+#         "Purpose of Travel": user_data.get("purpose_of_travel", "N/A")
+#     }
+#     prompt_id = "56d08b77-96b5-4ef4-8339-dcb772ee93f3"  # Replace with your actual prompt ID
+#     category_filters = do_wordware(prompt_id, categorization_inputs, wordware_api_key)
+    
+#     try:
+#         # Parse category_filters as amenities
+#         amenities = json.loads(category_filters) if category_filters else []
+#         return amenities
+#     except json.JSONDecodeError:
+#         st.error("Failed to parse amenities.")
+#         return []
+
+
+
+
+# Streamlit interface for hotel search and activity suggestions based on JSON user data
+st.title("Personalized Hotel Search and Activity Suggestions")
 
 # Load user data from users.json
 def load_user_data(file_path="users.json"):
@@ -144,66 +190,109 @@ if users:
     selected_user_data = next((user for user in users if user['name'] == selected_user), None)
     
     if selected_user_data:
-        if st.button(f"Search Hotels for {selected_user}"):
-            st.write(f"Searching hotels for {selected_user} traveling to {selected_user_data['destination']}...")
+        if st.button(f"Search Hotels and Activities for {selected_user}"):
+            st.write(f"Searching hotels and activities for {selected_user} traveling to {selected_user_data['destination']}...")
 
-            # Get hotel IDs based on city code
+            # Set location data based on destination for hotel and activity search
             if selected_user_data['destination'] == "Japan (Hokkaido)":
-                location_code = "SPK"  # Example IATA city code for Sapporo, Hokkaido
+                location_code = "SPK"
+                latitude, longitude = 43.0667, 141.3500
             elif selected_user_data['destination'] == "Japan (Tokyo)":
-                location_code = "TYO"  # Example IATA city code for Tokyo
+                location_code = "TYO"
+                latitude, longitude = 35.6895, 139.6917
             elif selected_user_data['destination'] == "USA (New York City)":
-                location_code = "NYC"  # Example IATA city code for New York City
+                location_code = "NYC"
+                latitude, longitude = 40.7128, -74.0060
             elif selected_user_data['destination'] == "UK (London)":
-                location_code = "LON"  # Example IATA city code for London
+                location_code = "LON"
+                latitude, longitude = 51.5074, -0.1278
             elif selected_user_data['destination'] == "France (Paris)":
-                location_code = "CDG"  # Example IATA city code for Paris
+                location_code = "PAR"
+                latitude, longitude = 48.8566, 2.3522
             else:
-                location_code = None
+                location_code, latitude, longitude = None, None, None
 
+            # Hotel search by location code
             if location_code:
-                hotel_ids = get_hotel_ids(location_code)
-                print(hotel_ids)
+                # Call categorize_traveler to get amenities
+                # amenities = categorize_traveler(selected_user_data)
+
+                # Pass amenities to get_hotel_ids
+                if location_code:
+                    # hotel_ids = get_hotel_ids(location_code, amenities=amenities)
+                    hotel_ids = get_hotel_ids(location_code)
+
                 
-            if hotel_ids:
-                # Use hotel IDs to get hotel offers
-                hotel_offers = search_hotel_offers(
-                    hotel_ids,
-                    selected_user_data['dates']['check_in'],
-                    selected_user_data['dates']['check_out'],
-                    selected_user_data['travel_group_size']
-                )
+                if hotel_ids:
+                    hotel_offers = search_hotel_offers(
+                        hotel_ids,
+                        selected_user_data['dates']['check_in'],
+                        selected_user_data['dates']['check_out'],
+                        selected_user_data['travel_group_size']
+                    )
 
-                if hotel_offers:
-                    st.write(f"Hotel Offers for {selected_user}:")
-                    for offer in hotel_offers.get("data", []):
-                        # Extract hotel and offer information
-                        hotel_info = offer.get("hotel", {})
-                        hotel_name = hotel_info.get("name", "N/A")
-                        hotel_address = hotel_info.get("address", {}).get("lines", ["N/A"])[0]  # Primary address line
-                        hotel_lat = hotel_info.get("latitude", "N/A")
-                        hotel_lon = hotel_info.get("longitude", "N/A")
-                        
-                        # Display hotel information
-                        st.subheader(hotel_name)
-                        st.write(f"Address: {hotel_address}")
-                        st.write(f"Location: Latitude {hotel_lat}, Longitude {hotel_lon}")
+                    if hotel_offers:
+                        st.write(f"Hotel Offers for {selected_user}:")
+                        for offer in hotel_offers.get("data", []):
+                            hotel_name = offer.get("hotel", {}).get("name", "N/A")
+                            hotel_address = offer.get("hotel", {}).get("address", {}).get("lines", ["N/A"])[0]
+                            price = offer.get("offers", [{}])[0].get("price", {}).get("total", "N/A")
+                            currency = offer.get("offers", [{}])[0].get("price", {}).get("currency", "N/A")
 
-                        # Loop through each offer for the hotel
-                        for individual_offer in offer.get("offers", []):
-                            # Extract offer details
-                            price_info = individual_offer.get("price", {})
-                            price = price_info.get("total", "N/A")
-                            currency = price_info.get("currency", "N/A")
-                            check_in = individual_offer.get("checkInDate", "N/A")
-                            check_out = individual_offer.get("checkOutDate", "N/A")
-                            
-                            # Display offer details
-                            st.write(f"Check-in: {check_in}")
-                            st.write(f"Check-out: {check_out}")
+                            st.subheader(hotel_name)
+                            st.write(f"Address: {hotel_address}")
                             st.write(f"Price: {currency} {price}")
                             st.write("---")
+                    else:
+                        st.write(f"No hotel offers found for {selected_user}.")
                 else:
-                    st.write(f"No hotel offers found for {selected_user}.")
+                    st.write("No hotels found in the selected city.")
             else:
-                st.write("No hotels found in the selected city.")
+                st.write(f"Unknown location for {selected_user_data['destination']}.")
+
+            # Activity search by latitude and longitude
+            if latitude and longitude:
+                activities = get_tours_and_activities(latitude, longitude)
+                activities_json = json.dumps(activities[:10])  # Format and limit activities as JSON
+                if activities:
+                    st.write(f"Travel Information for {selected_user} in {selected_user_data['destination']}:")
+                    for activity in activities:
+                        activity_name = activity.get("name", "N/A")
+                        activity_description = activity.get("shortDescription", "No description available")
+                        activity_price = activity.get("price", {}).get("amount", "N/A")
+                        activity_currency = activity.get("price", {}).get("currencyCode", "N/A")
+                        booking_link = activity.get("bookingLink", "No booking link available")
+
+                        # st.subheader(activity_name)
+                        # st.write(f"Description: {activity_description}")
+                        # st.write(f"Price: {activity_currency} {activity_price}")
+                        # st.write(f"[Book this activity]({booking_link})")
+                        # st.write("---")
+
+                        print(activity_name)
+                        print(f"Description: {activity_description}")
+                        print(f"Price: {activity_currency} {activity_price}")
+                        print(f"[Book this activity]({booking_link})")
+                        print("-------------------------------------------")
+
+
+                else:
+                    st.write("No tours and activities found for the selected city.")
+            
+            inputs_wordware = {
+                "Destination": selected_user_data["destination"],
+                "Persona_Name": selected_user_data["name"],
+                "Persona_Occupation": selected_user_data.get("occupation", "N/A"),
+                "Persona_Location": selected_user_data["home_country"],
+                "Persona_StayLength": selected_user_data["duration_of_stay"],
+                "Persona_Date": selected_user_data["dates"]["check_in"],
+                "Persona_GroupSize": str(selected_user_data["travel_group_size"]),
+                "Persona_GroupAge": selected_user_data["group_type"],
+                "Persona_Nationality": selected_user_data["nationality"],
+                "Persona_TravelHistory": ", ".join(selected_user_data["past_purchase_history"]),
+                "Activities_JSON": activities_json  # New field for activities JSON
+            }
+
+            prompt_id = "06c13905-d197-4acf-9686-a142257377c5"
+            output_text = do_wordware(prompt_id, inputs_wordware, wordware_api_key)
+            st.write("Generated Information:", output_text)

@@ -4,6 +4,7 @@
         "name": "Alex Carter",
         "home_country": "Canada",
         "destination": "USA (New York City)",
+        "occupation": "Accountant",
         "duration_of_stay": "14 days",
         "dates": {
             "check_in": "January 5th, 2025",
@@ -24,12 +25,14 @@
         "accessibility_needs": "None",
         "dietary_requirements": "Vegetarian",
         "price_sensitivity": "Medium",
-        "language_preference": "English"
+        "language_preference": "English",
+        "ticket_type": "Business"
         },
         {
         "name": "Siti Rahmawati",
         "home_country": "Indonesia",
         "destination": "UK (London)",
+        "occupation": "Civil Engineer",
         "duration_of_stay": "10 days",
         "dates": {
             "check_in": "February 4th, 2025",
@@ -47,7 +50,34 @@
         "accessibility_needs": "Child-friendly amenities",
         "dietary_requirements": "Halal meals",
         "price_sensitivity": "High",
-        "language_preference": ["Indonesian", "Some English"]
-        }
+        "language_preference": ["Indonesian", "Some English"],
+        "ticket_type": "Economy"
+        },
+        {
+            "name": "Joe Hisaishi",
+            "home_country": "Tokyo",
+            "destination": "USA (New York City)",
+            "occupation": "Musician",
+            "duration_of_stay": "5 days",
+            "dates": {
+                "check_in": "March 5th, 2025",
+                "check_out": "March 19th, 2025"
+            },
+            "purpose_of_travel": "Relaxation",
+            "interests": ["Shopping", "Museums"],
+            "travel_group_size": 5,
+            "group_type": "Family",
+            "nationality": "Japanese",
+            "past_purchase_history": [
+                "Previous trips to Singapore",
+                "Outdoor adventure tours",
+                "Historic Sites"
+            ],
+            "accessibility_needs": "None",
+            "dietary_requirements": "None",
+            "price_sensitivity": "Medium",
+            "language_preference": "English",
+            "ticket_type": "Business"
+            }
     ]
     }
