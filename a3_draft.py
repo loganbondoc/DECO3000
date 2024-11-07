@@ -41,8 +41,10 @@ def get_access_token():
         st.error(f"Failed to get access token: {response.status_code}")
         return None
 
-# Function to call WordWare API
+# Can be attributed to Week 6 tutorial
 def do_wordware(prompt_id, inputs_wordware, api_key):
+    ''' Takes prompt_id url, inputs for agents and API key to call WordWare API '''
+
     response = requests.post(
         f"https://app.wordware.ai/api/released-app/{prompt_id}/run",
         json={"inputs": inputs_wordware},
@@ -67,6 +69,9 @@ def do_wordware(prompt_id, inputs_wordware, api_key):
 
 # Step 1: Function to get hotel IDs from Hotel List API with filters
 def get_hotel_ids(city_code, amenities=None, max_ids=10):
+    ''' Takes city code, amenities and max amount of ids to
+    retrieve Hotel IDs from Amadeus Hotel List API '''
+
     token = get_access_token()
     if not token:
         return None
@@ -95,6 +100,9 @@ def get_hotel_ids(city_code, amenities=None, max_ids=10):
 
 # Step 2: Function to search for hotel offers using Hotel Offers API
 def search_hotel_offers(hotel_ids, check_in_date, check_out_date, adults):
+    ''' Takes hotel_ids, check in date, check out date, no. of adults
+    to search for specific hotel offers '''
+
     token = get_access_token()
     if not token:
         return None
@@ -165,7 +173,7 @@ def get_tours_and_activities(latitude, longitude, max_activities=30):
 
 
 # Streamlit interface for hotel search and activity suggestions based on JSON user data
-st.title("Personalized Hotel Search and Activity Suggestions")
+st.title("UrTrip Travel Webpage")
 
 # Load user data from users.json
 def load_user_data(file_path="users.json"):
@@ -193,7 +201,7 @@ if users:
         if st.button(f"Search Hotels and Activities for {selected_user}"):
             st.write(f"Searching hotels and activities for {selected_user} traveling to {selected_user_data['destination']}...")
 
-            # Set location data based on destination for hotel and activity search
+            # Ugly hard coded locations for hotel and activity search
             if selected_user_data['destination'] == "Japan (Hokkaido)":
                 location_code = "SPK"
                 latitude, longitude = 43.0667, 141.3500
@@ -216,8 +224,8 @@ if users:
             if location_code:
                 # Call categorize_traveler to get amenities
                 # amenities = categorize_traveler(selected_user_data)
-
                 # Pass amenities to get_hotel_ids
+                
                 if location_code:
                     # hotel_ids = get_hotel_ids(location_code, amenities=amenities)
                     hotel_ids = get_hotel_ids(location_code)
@@ -290,7 +298,7 @@ if users:
                 "Persona_GroupAge": selected_user_data["group_type"],
                 "Persona_Nationality": selected_user_data["nationality"],
                 "Persona_TravelHistory": ", ".join(selected_user_data["past_purchase_history"]),
-                "Activities_JSON": activities_json  # New field for activities JSON
+                "Activities_JSON": activities_json
             }
 
             prompt_id = "06c13905-d197-4acf-9686-a142257377c5"
