@@ -271,12 +271,6 @@ if users:
                         activity_currency = activity.get("price", {}).get("currencyCode", "N/A")
                         booking_link = activity.get("bookingLink", "No booking link available")
 
-                        # st.subheader(activity_name)
-                        # st.write(f"Description: {activity_description}")
-                        # st.write(f"Price: {activity_currency} {activity_price}")
-                        # st.write(f"[Book this activity]({booking_link})")
-                        # st.write("---")
-
                         print(activity_name)
                         print(f"Description: {activity_description}")
                         print(f"Price: {activity_currency} {activity_price}")
