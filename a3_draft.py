@@ -294,13 +294,16 @@ if users:
                 "Persona_Location": selected_user_data["home_country"],
                 "Persona_StayLength": selected_user_data["duration_of_stay"],
                 "Persona_Date": selected_user_data["dates"]["check_in"],
-                "Persona_GroupSize": str(selected_user_data["travel_group_size"]),
-                "Persona_GroupAge": selected_user_data["group_type"],
+                "Travel_Group_Type": selected_user_data["group_type"],
                 "Persona_Nationality": selected_user_data["nationality"],
                 "Persona_TravelHistory": ", ".join(selected_user_data["past_purchase_history"]),
+                "Persona_Stay_Preference": selected_user_data["price_sensitivity"],
+                "Persona_Budget": selected_user_data["PERSONA_STAY_PREFERENCE"],
+                "Traveler_Experience": selected_user_data["PERSONA_STAY_PREFERENCE"],
+                "Interests": selected_user_data["TRAVELER_EXPERIENCE"],
                 "Activities_JSON": activities_json
             }
 
-            prompt_id = "06c13905-d197-4acf-9686-a142257377c5"
+            prompt_id = "367ad832-13de-4e0f-953a-4a1262a578ce"
             output_text = do_wordware(prompt_id, inputs_wordware, wordware_api_key)
             st.write("Generated Information:", output_text)

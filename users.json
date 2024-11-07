@@ -24,9 +24,11 @@
         ],
         "accessibility_needs": "None",
         "dietary_requirements": "Vegetarian",
-        "price_sensitivity": "Medium",
+        "price_sensitivity": "High Budget",
         "language_preference": "English",
-        "ticket_type": "Business"
+        "ticket_type": "Business",
+        "PERSONA_STAY_PREFERENCE": "Hotel",
+        "TRAVELER_EXPERIENCE": "Experienced solo traveler"
         },
         {
         "name": "Siti Rahmawati",
@@ -49,9 +51,11 @@
         ],
         "accessibility_needs": "Child-friendly amenities",
         "dietary_requirements": "Halal meals",
-        "price_sensitivity": "High",
+        "price_sensitivity": "High Budget",
         "language_preference": ["Indonesian", "Some English"],
-        "ticket_type": "Economy"
+        "ticket_type": "Economy",
+        "PERSONA_STAY_PREFERENCE": "Hotel",
+        "TRAVELER_EXPERIENCE": "Seasoned Traveler"
         },
         {
             "name": "Joe Hisaishi",
@@ -75,9 +79,11 @@
             ],
             "accessibility_needs": "None",
             "dietary_requirements": "None",
-            "price_sensitivity": "Medium",
+            "price_sensitivity": "Medium Budget",
             "language_preference": "English",
-            "ticket_type": "Business"
+            "ticket_type": "Business",
+            "PERSONA_STAY_PREFERENCE": "Hotel",
+            "TRAVELER_EXPERIENCE": "Family Vacationer"
             }
     ]
     }
