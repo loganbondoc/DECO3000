@@ -1,6 +1,5 @@
 # A3 DECO3000
 
-
 ## To run the program:
 ### Use the following commands in the console:
 - pip install exa_py
